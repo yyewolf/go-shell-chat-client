@@ -1,0 +1,1 @@
+go-shell-chat-client
