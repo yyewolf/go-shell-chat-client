@@ -13,20 +13,54 @@ import (
 
 var bufferStdin []byte
 
+func modeStr(mode int) string {
+	modeSend = false
+	modeFiles = false
+	modeMultiline = false
+	switch mode {
+	case 1:
+		modeSend = true
+		return fmt.Sprintf("%s%s%s", a.Green("c"), a.Red("f"), a.Red("m"))
+	case 2:
+		modeSend = true
+		modeFiles = true
+		return fmt.Sprintf("%s%s%s", a.Green("c"), a.Green("f"), a.Red("m"))
+	case 3:
+		modeSend = true
+		modeMultiline = true
+		return fmt.Sprintf("%s%s%s", a.Green("c"), a.Red("f"), a.Green("m"))
+	case 4:
+		modeSend = true
+		modeFiles = true
+		modeMultiline = true
+		return fmt.Sprintf("%s%s%s", a.Green("c"), a.Green("f"), a.Green("m"))
+	}
+	return fmt.Sprintf("%s%s%s", a.Red("c"), a.Red("f"), a.Red("m"))
+}
+
 func rePrintInput() {
 	hostStr := a.Red(host)
-	modeStr := a.Green("c")
+	mode := modeStr(currentMode)
 	if connected {
 		hostStr = a.Blue(host)
 	}
-	if currentMode == 1 {
-		modeStr = a.Red("c")
+	if !modeMultiline || len(buffer) == 0 {
+		fmt.Printf("%s:%s %s $ %s", a.Green(username), hostStr, mode, string(bufferStdin))
+	} else {
+		fmt.Printf("%s:%s %s $ %s\r\n", a.Green(username), hostStr, mode, buffer[0])
+		for i := range buffer {
+			if i != 0 {
+				fmt.Printf("%s%s", buffer[i], "\r\n")
+			}
+		}
+		fmt.Printf("%s", string(bufferStdin))
 	}
-
-	fmt.Printf("%s:%s %s $ %s", a.Green(username), hostStr, modeStr, string(bufferStdin))
 }
 
 func clearInput() {
+	if modeMultiline && len(buffer) != 0 {
+		fmt.Printf("\x1b[%dA", len(buffer))
+	}
 	fmt.Print("\x1b[2K\r")
 }
 
@@ -47,14 +81,37 @@ func askLoop() {
 		evt := termbox.PollEvent()
 		switch evt.Key {
 		case termbox.KeyEnter:
-			fmt.Print("\n")
-			go commandHandler(bufferStdin)
-			bufferStdin = make([]byte, 0)
+			if modeMultiline {
+				if lastKey == termbox.KeyEnter {
+					// We finish the multiline
+					connection.WriteJSON(Message{
+						Op: sendMessageOp,
+						Data: SendMessage{
+							Type:     messageMultiline,
+							Messages: buffer,
+						},
+					})
+					buffer = make([]string, 0)
+				} else {
+					buffer = append(buffer, string(bufferStdin))
+					fmt.Print("\r\n")
+					bufferStdin = make([]byte, 0)
+				}
+			} else {
+				fmt.Print("\n")
+				go commandHandler(bufferStdin)
+				bufferStdin = make([]byte, 0)
+			}
 		case termbox.KeyCtrlC:
 			termbox.Close()
 			os.Exit(0)
 			return
 		case termbox.KeyBackspace:
+			if len(bufferStdin) > 0 {
+				bufferStdin = bufferStdin[:len(bufferStdin)-1]
+				reflow()
+			}
+		case termbox.KeyBackspace2:
 			if len(bufferStdin) > 0 {
 				bufferStdin = bufferStdin[:len(bufferStdin)-1]
 				reflow()
@@ -67,7 +124,7 @@ func askLoop() {
 			reflow()
 		case termbox.KeyArrowRight:
 			currentMode += 1
-			if currentMode > 1 {
+			if currentMode > 4 {
 				currentMode = 0
 			}
 			reflow()
@@ -80,7 +137,7 @@ func askLoop() {
 				fmt.Print(string(evt.Ch))
 			}
 		}
-
+		lastKey = evt.Key
 	}
 }
 
@@ -92,8 +149,7 @@ func commandHandler(data []byte) {
 	}
 	command := strings.ToLower(splt[0])
 
-	switch currentMode {
-	default:
+	if !modeSend {
 		path, err := exec.LookPath(command)
 		if err == nil {
 			var args []string
@@ -116,7 +172,7 @@ func commandHandler(data []byte) {
 		} else {
 			printf("")
 		}
-	case 0:
+	} else {
 		if connection == nil {
 			printf("not connected yet")
 			return

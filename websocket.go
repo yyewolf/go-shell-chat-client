@@ -60,8 +60,22 @@ func handleMessages(m *Message) {
 			return
 		}
 		packet.Handle()
+	case sendFileOp:
+		packet := &MessageAck{}
+		err = json.Unmarshal(d, &packet)
+		if err != nil {
+			return
+		}
+		packet.Handle()
 	case receiveMessageOp:
 		packet := &ReceiveMessage{}
+		err = json.Unmarshal(d, &packet)
+		if err != nil {
+			return
+		}
+		packet.Handle()
+	case receiveFileOp:
+		packet := &File{}
 		err = json.Unmarshal(d, &packet)
 		if err != nil {
 			return

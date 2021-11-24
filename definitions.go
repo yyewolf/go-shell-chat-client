@@ -1,12 +1,17 @@
 package main
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+	"github.com/yyewolf/termbox-go"
+)
 
 // Defines OP names
 const (
 	identifyOp = iota
 	sendMessageOp
 	receiveMessageOp
+	sendFileOp
+	receiveFileOp
 )
 
 // Defines messages type
@@ -55,6 +60,12 @@ type ReceiveMessage struct {
 	Messages []string `json:"messages,omitempty"`
 }
 
+type File struct {
+	Name string `json:"name"`
+	User string `json:"user,omitempty"`
+	Data []byte `json:"data,omitempty"`
+}
+
 // Variables relevant to client
 var host string
 var port string
@@ -69,3 +80,16 @@ var commands map[string]func(*commandCtx)
 type commandCtx struct {
 	Args []string
 }
+
+// Current mode
+var (
+	modeSend      bool
+	modeFiles     bool
+	modeMultiline bool
+)
+
+// Multiline support
+var (
+	lastKey termbox.Key
+	buffer  []string
+)

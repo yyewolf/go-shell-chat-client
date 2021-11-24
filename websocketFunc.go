@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+
 	a "github.com/logrusorgru/aurora"
 )
 
@@ -40,13 +43,34 @@ func (m *ReceiveMessage) Handle() {
 	case messageDisconnection:
 		printf("%s:%s has disconnected.", a.Green(m.User), hostStr)
 	case messageMultiline:
-		var str string
-		for _, msg := range m.Messages {
-			str = str + msg + "\r\n"
+		m.HandleMulti()
+	}
+}
+
+func (m *ReceiveMessage) HandleMulti() {
+	hostStr := a.Red(host)
+	if connected {
+		hostStr = a.Blue(host)
+	}
+	var str string
+	for _, msg := range m.Messages {
+		str = str + msg + "\r\n"
+	}
+	str += "\033[A"
+	if m.User != username {
+		printf("%s:%s $ %s", a.Green(m.User), hostStr, str)
+	}
+}
+
+func (m *File) Handle() {
+	if modeFiles {
+		err := os.Mkdir("dl", os.ModePerm)
+		if err != nil {
+			printf("%v", err)
 		}
-		str += "\033[A"
-		if m.User != username {
-			printf("%s:%s $ %s", a.Green(m.User), hostStr, str)
-		}
+		ioutil.WriteFile("dl/"+m.Name, m.Data, 0777)
+		printf("Received dl/%s from %s", m.Name, a.Blue(m.User))
+	} else {
+		printf("Ignored %s from %s", m.Name, a.Blue(m.User))
 	}
 }
