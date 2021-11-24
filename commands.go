@@ -13,11 +13,15 @@ func sendMsg(c *commandCtx) {
 		message += arg + " "
 	}
 	message = strings.TrimSpace(message)
-	connection.WriteJSON(Message{
-		Op: sendMessageOp,
-		Data: SendMessage{
-			Type:    0,
-			Message: message,
-		},
-	})
+	if message != "" {
+		connection.WriteJSON(Message{
+			Op: sendMessageOp,
+			Data: SendMessage{
+				Type:    0,
+				Message: message,
+			},
+		})
+	} else {
+		printf("")
+	}
 }

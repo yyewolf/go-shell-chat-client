@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -9,15 +8,6 @@ import (
 	"syscall"
 
 	"github.com/yyewolf/termbox-go"
-	"golang.org/x/sys/windows"
-	"golang.org/x/term"
-)
-
-var s *term.State
-var b = bytes.NewBufferString("")
-var (
-	in        windows.Handle
-	interrupt windows.Handle
 )
 
 // We read passed params

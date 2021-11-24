@@ -123,7 +123,7 @@ func commandHandler(data []byte) {
 		}
 		call, found := commands[command]
 		if !found {
-			call, _ := commands[">"]
+			call = commands[">"]
 			args := []string{}
 			if len(splt) > 0 {
 				args = splt[0:]
