@@ -34,11 +34,23 @@ func (m *ReceiveMessage) Handle() {
 			printf("%s:%s $ %s", a.Green(m.User), hostStr, m.Message)
 		}
 		break
+	case messageDM:
+		printf("%s%s:%s $ %s", a.Blue("p."), a.Green(m.User), hostStr, m.Message)
+		break
 	case messageConnection:
 		printf("%s:%s has connected.", a.Green(m.User), hostStr)
 		break
 	case messageDisconnection:
 		printf("%s:%s has disconnected.", a.Green(m.User), hostStr)
 		break
+	case messageMultiline:
+		var str string
+		for _, msg := range m.Messages {
+			str = str + msg + "\r\n"
+		}
+		str += "\033[A"
+		if m.User != username {
+			printf("%s:%s $ %s", a.Green(m.User), hostStr, str)
+		}
 	}
 }

@@ -67,7 +67,7 @@ func askLoop() {
 			reflow()
 		case termbox.KeyArrowRight:
 			currentMode += 1
-			if currentMode < 1 {
+			if currentMode > 1 {
 				currentMode = 0
 			}
 			reflow()
@@ -117,6 +117,10 @@ func commandHandler(data []byte) {
 			printf("")
 		}
 	case 0:
+		if connection == nil {
+			printf("not connected yet")
+			return
+		}
 		call, found := commands[command]
 		if !found {
 			call, _ := commands[">"]

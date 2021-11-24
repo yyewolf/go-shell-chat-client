@@ -15,6 +15,7 @@ const (
 	messageConnection
 	messageDisconnection
 	messageMultiline
+	messageDM
 )
 
 // Defines codes
