@@ -53,7 +53,13 @@ func handleMessages(m *Message) {
 			return
 		}
 		packet.Handle()
-		connected = true
+	case sendMessageOp:
+		packet := &MessageAck{}
+		err = json.Unmarshal(d, &packet)
+		if err != nil {
+			return
+		}
+		packet.Handle()
 	case receiveMessageOp:
 		packet := &ReceiveMessage{}
 		err = json.Unmarshal(d, &packet)

@@ -43,6 +43,10 @@ type ResponseIdentify struct {
 	Code int `json:"code,omitempty"`
 }
 
+type MessageAck struct {
+	Code int `json:"code,omitempty"`
+}
+
 type ReceiveMessage struct {
 	Type     int      `json:"type"`
 	User     string   `json:"user,omitempty"`
@@ -55,6 +59,7 @@ var host string
 var port string
 var username string
 var connected bool
+var currentMode int
 var connection *websocket.Conn
 
 // Client side commands

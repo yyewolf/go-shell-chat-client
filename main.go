@@ -1,13 +1,23 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/yyewolf/termbox-go"
+	"golang.org/x/sys/windows"
+	"golang.org/x/term"
+)
+
+var s *term.State
+var b = bytes.NewBufferString("")
+var (
+	in        windows.Handle
+	interrupt windows.Handle
 )
 
 // We read passed params
@@ -20,12 +30,7 @@ func init() {
 		panic("Set username using -u")
 	}
 
-	_, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	terminal.NewTerminal(os.Stdin, ">")
+	termbox.Init()
 
 	commandLoader()
 	go askLoop()
